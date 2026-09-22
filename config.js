@@ -17,5 +17,5 @@ const CONFIG = {
   // (1) link soal tidak pernah dikirim oleh server di luar jadwal, apa pun
   //     browser yang dipakai, dan (2) pengawas ruangan + pengaturan SEB itu
   //     sendiri yang mengunci perangkat siswa selama ujian berlangsung.
-  REQUIRE_SEB: false
+  REQUIRE_SEB: true
 };
