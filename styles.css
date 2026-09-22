@@ -31,7 +31,7 @@ body{
   border-bottom:3px solid var(--seal);
   max-width:640px;
   margin:0 auto;
-  align:center;
+  position:center;
 }
 .eyebrow-mark{
   margin:0 0 .35rem;
