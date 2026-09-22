@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Portal Ujian</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <p class="eyebrow-mark">Portal Ujian</p>
+    <h1 id="school-name">Nama Sekolah</h1>
+  </header>
+
+  <div id="gate-warning" class="gate-warning" hidden>
+    <div class="gate-warning__seal">&times;</div>
+    <h2>Halaman ini hanya untuk Safe Exam Browser</h2>
+    <p>Anda sedang membuka halaman ini di browser biasa. Tutup halaman ini, buka <strong>Safe Exam Browser</strong>, lalu masuk kembali dari sana.</p>
+    <p class="gate-warning__hint">Jika Anda sudah membuka SEB tapi pesan ini masih muncul, hubungi pengawas ruangan.</p>
+  </div>
+
+  <div id="loading-state" class="loading-state">
+    <p>Memuat daftar ujian&hellip;</p>
+  </div>
+
+  <div id="error-state" class="error-state" hidden>
+    <p>Tidak dapat memuat daftar ujian. Periksa koneksi internet, lalu muat ulang halaman.</p>
+  </div>
+
+  <main id="exam-list" class="exam-list" hidden></main>
+
+  <footer class="site-footer">
+    <p>Daftar diperbarui otomatis. Waktu server: <span id="server-time" class="mono">&mdash;</span></p>
+  </footer>
+
+  <script src="config.js"></script>
+  <script src="main.js"></script>
+</body>
+</html>
