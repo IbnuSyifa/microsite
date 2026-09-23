@@ -90,7 +90,7 @@ body{
   font-family:var(--font-mono);
   font-size:.85rem;
   color:var(--muted);
-  align:center;
+  text-align:center;
   text-transform:uppercase;
   letter-spacing:.04em;
   border-bottom:1px solid var(--hairline);
