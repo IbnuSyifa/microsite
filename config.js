@@ -1,7 +1,7 @@
 // Satu-satunya file yang biasanya perlu diubah untuk operasional sehari-hari.
 const CONFIG = {
   // Tempel URL Web App dari Apps Script di sini (lihat SETUP.md langkah 4)
-  API_URL: "https://script.googleusercontent.com/macros/echo?user_content_key=AUkAhnQsdjy0WnKiIPuQvGsdJHmNAY-_2hz2sdFhkYl7AukOrPuSpbTxNGRh-fjlDW3BNFFrH2wFjGUTFhhyqHjVrEj-l9XCtLpzEExncoAT5IoCLWpjGD9Ko0LFQsjvkPuLkea_r3PniDrgWFfmjLgEV0enKLqUDTn28Od00OdG_6tBcS_f0VMjO0Ab9fkssMH7cZOLg70H_SwVeI3ltKwS351x2B99iM8IwKNV7rJ4p-F1hlXiOf9e3sVKBMIPzxr2vcB67yKWaeEDBY4ulDR0X3OHXzKTeQ&lib=MmleGX1rvo7Lol8hZM-BYbpgUCQBCoQxv",
+  API_URL: "https://script.google.com/macros/s/AKfycbwloQLM0TRSn3hqeQvcvZv1wcZiq7e6dBdyNZnwo1ZkswYTaHeGijaQEUxI0yeM6bgF/exec",
 
   // Nama sekolah, tampil di judul halaman
   SCHOOL_NAME: "SMAIT Al Haraki",
