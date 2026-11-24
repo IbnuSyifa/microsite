@@ -92,19 +92,39 @@ function renderExams(items) {
   container.hidden = false;
 }
 
+function showLoadError(err) {
+  document.getElementById('loading-state').hidden = true;
+  var box = document.getElementById('error-state');
+  box.hidden = false;
+  var detail = document.getElementById('error-detail');
+  if (!detail) {
+    detail = document.createElement('p');
+    detail.id = 'error-detail';
+    detail.className = 'mono';
+    box.appendChild(detail);
+  }
+  detail.textContent = 'Detail teknis: ' + (err && err.message ? err.message : String(err));
+}
+
 function loadExams() {
   fetch(CONFIG.API_URL)
-    .then(function (res) { return res.json(); })
-    .then(function (data) {
+    .then(function (res) {
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      return res.text();
+    })
+    .then(function (text) {
+      var data;
+      try {
+        data = JSON.parse(text);
+      } catch (e) {
+        throw new Error('Balasan bukan JSON: ' + text.substring(0, 150));
+      }
       document.getElementById('loading-state').hidden = true;
       document.getElementById('error-state').hidden = true;
       document.getElementById('server-time').textContent = formatTime(data.server_time);
       renderExams(data.data || []);
     })
-    .catch(function () {
-      document.getElementById('loading-state').hidden = true;
-      document.getElementById('error-state').hidden = false;
-    });
+    .catch(showLoadError);
 }
 
 function init() {
