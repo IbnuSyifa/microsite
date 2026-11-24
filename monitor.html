@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Pemantau Guru</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<style>
+  .gate-form{max-width:640px;margin:2.5rem auto;padding:0 1.5rem;}
+  .gate-form label{display:block;font-family:var(--font-mono);font-size:.85rem;color:var(--muted);margin-bottom:.5rem;}
+  .gate-form input{width:100%;padding:.65rem .75rem;font-family:var(--font-mono);font-size:1rem;border:1px solid var(--hairline);background:#fff;color:var(--ink);}
+  .gate-form button{margin-top:.75rem;font-family:var(--font-body);font-weight:600;font-size:.9rem;color:#fff;background:var(--ink);border:none;padding:.6rem 1.1rem;cursor:pointer;}
+  .gate-form__error{color:var(--seal);font-size:.9rem;margin:.5rem 0 0;}
+  .link-reset{background:none;border:none;padding:0;color:var(--muted);text-decoration:underline;cursor:pointer;font:inherit;}
+</style>
+</head>
+<body>
+  <header class="site-header">
+    <p class="eyebrow-mark">Portal Ujian &middot; Pemantau Guru</p>
+    <h1 id="school-name">Nama Sekolah</h1>
+  </header>
+
+  <form id="gate-form" class="gate-form" hidden>
+    <label for="kode">Kode guru</label>
+    <input id="kode" type="password" autocomplete="off" required>
+    <button type="submit">Masuk</button>
+    <p id="gate-error" class="gate-form__error" hidden>Kode salah. Coba lagi.</p>
+  </form>
+
+  <div id="loading-state" class="loading-state" hidden>
+    <p>Memuat daftar ujian&hellip;</p>
+  </div>
+
+  <div id="error-state" class="error-state" hidden>
+    <p>Tidak dapat memuat daftar ujian.</p>
+    <p id="error-detail" class="mono"></p>
+  </div>
+
+  <main id="exam-list" class="exam-list" hidden></main>
+
+  <footer class="site-footer">
+    <p>Diperbarui otomatis. Waktu server: <span id="server-time" class="mono">&mdash;</span>
+    &middot; <button type="button" id="btn-reset" class="link-reset">Ganti kode</button></p>
+  </footer>
+
+  <script src="config.js"></script>
+  <script>
+  (function () {
+    document.getElementById('school-name').textContent = CONFIG.SCHOOL_NAME;
+    document.title = 'Pemantau Guru \u2014 ' + CONFIG.SCHOOL_NAME;
+
+    var form = document.getElementById('gate-form');
+    var input = document.getElementById('kode');
+    var gateError = document.getElementById('gate-error');
+    var loadingEl = document.getElementById('loading-state');
+    var errorEl = document.getElementById('error-state');
+    var listEl = document.getElementById('exam-list');
+    var pollId = null;
+
+    function readKey() {
+      try { return sessionStorage.getItem('kunciGuru') || ''; } catch (e) { return ''; }
+    }
+    function saveKey(v) {
+      try {
+        if (v) sessionStorage.setItem('kunciGuru', v);
+        else sessionStorage.removeItem('kunciGuru');
+      } catch (e) {}
+    }
+    var kunci = readKey();
+
+    function stopPolling() {
+      if (pollId) { clearInterval(pollId); pollId = null; }
+    }
+    function startPolling() {
+      if (!pollId) pollId = setInterval(load, CONFIG.REFRESH_INTERVAL_MS);
+    }
+
+    function showForm(withError) {
+      stopPolling();
+      listEl.hidden = true;
+      loadingEl.hidden = true;
+      errorEl.hidden = true;
+      gateError.hidden = !withError;
+      form.hidden = false;
+      input.focus();
+    }
+
+    function showError(msg) {
+      loadingEl.hidden = true;
+      errorEl.hidden = false;
+      document.getElementById('error-detail').textContent = 'Detail teknis: ' + msg;
+    }
+
+    function formatTime(iso) {
+      var d = new Date(iso);
+      return d.toLocaleString('id-ID', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+    }
+
+    function statusLabel(status) {
+      if (status === 'berlangsung') return 'Sedang berlangsung';
+      if (status === 'selesai') return 'Sudah ditutup';
+      return 'Belum dibuka';
+    }
+
+    function renderExams(items) {
+      listEl.innerHTML = '';
+      if (!items.length) {
+        listEl.innerHTML = '<p>Belum ada ujian yang dijadwalkan.</p>';
+        listEl.hidden = false;
+        return;
+      }
+
+      var groups = {};
+      items.forEach(function (item) {
+        if (!groups[item.kelas]) groups[item.kelas] = [];
+        groups[item.kelas].push(item);
+      });
+
+      Object.keys(groups).sort().forEach(function (kelas) {
+        var groupEl = document.createElement('section');
+        groupEl.className = 'exam-group';
+
+        var title = document.createElement('h2');
+        title.className = 'exam-group__title';
+        title.textContent = kelas;
+        groupEl.appendChild(title);
+
+        groups[kelas].forEach(function (item) {
+          var row = document.createElement('div');
+          row.className = 'exam-row';
+
+          var info = document.createElement('div');
+          info.className = 'exam-row__info';
+
+          var subject = document.createElement('p');
+          subject.className = 'exam-row__subject';
+          subject.textContent = item.mapel;
+
+          var time = document.createElement('p');
+          time.className = 'exam-row__time';
+          time.textContent = formatTime(item.mulai) + ' \u2013 ' + formatTime(item.selesai);
+
+          info.appendChild(subject);
+          info.appendChild(time);
+
+          var action = document.createElement('div');
+          action.className = 'exam-row__action';
+
+          var badge = document.createElement('span');
+          badge.className = 'status-badge status-badge--' + item.status;
+          badge.textContent = statusLabel(item.status);
+          action.appendChild(badge);
+
+          if (item.link) {
+            var btn = document.createElement('a');
+            btn.className = 'btn-start';
+            btn.href = item.link;
+            btn.target = '_blank';
+            btn.rel = 'noopener';
+            btn.textContent = 'Buka Ujian';
+            action.appendChild(btn);
+          }
+
+          row.appendChild(info);
+          row.appendChild(action);
+          groupEl.appendChild(row);
+        });
+
+        listEl.appendChild(groupEl);
+      });
+
+      listEl.hidden = false;
+    }
+
+    function handle(res) {
+      if (res && res.error) {
+        kunci = '';
+        saveKey('');
+        showForm(true);
+        return;
+      }
+      form.hidden = true;
+      loadingEl.hidden = true;
+      errorEl.hidden = true;
+      document.getElementById('server-time').textContent = formatTime(res.server_time);
+      renderExams(res.data || []);
+      startPolling();
+    }
+
+    // Memuat data lewat tag <script> (JSONP), sama seperti halaman siswa.
+    function load() {
+      if (!kunci) { showForm(false); return; }
+
+      var cb = '__guruCb' + Date.now();
+      var script = document.createElement('script');
+      var finished = false;
+      var timer;
+
+      function cleanup() {
+        finished = true;
+        clearTimeout(timer);
+        delete window[cb];
+        if (script.parentNode) script.parentNode.removeChild(script);
+      }
+
+      window[cb] = function (res) { cleanup(); handle(res); };
+
+      timer = setTimeout(function () {
+        if (finished) return;
+        cleanup();
+        showError('Tidak ada balasan dari server dalam 15 detik');
+      }, 15000);
+
+      script.onerror = function () {
+        if (finished) return;
+        cleanup();
+        showError('Skrip dari Apps Script gagal dimuat');
+      };
+
+      script.src = CONFIG.API_URL + (CONFIG.API_URL.indexOf('?') === -1 ? '?' : '&') +
+        'mode=guru&kunci=' + encodeURIComponent(kunci) + '&callback=' + cb;
+      document.head.appendChild(script);
+    }
+
+    form.addEventListener('submit', function (ev) {
+      ev.preventDefault();
+      kunci = input.value.trim();
+      input.value = '';
+      if (!kunci) return;
+      saveKey(kunci);
+      form.hidden = true;
+      loadingEl.hidden = false;
+      load();
+    });
+
+    document.getElementById('btn-reset').addEventListener('click', function () {
+      kunci = '';
+      saveKey('');
+      showForm(false);
+    });
+
+    if (kunci) {
+      loadingEl.hidden = false;
+      load();
+    } else {
+      showForm(false);
+    }
+  })();
+  </script>
+</body>
+</html>
