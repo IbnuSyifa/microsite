@@ -7,7 +7,7 @@ const CONFIG = {
   SCHOOL_NAME: "SMAIT Al Haraki",
 
   // Seberapa sering halaman mengambil data terbaru (dalam milidetik)
-  REFRESH_INTERVAL_MS: 30000,
+  REFRESH_INTERVAL_MS: 3000,
 
   // Jika true, halaman menolak tampil di luar Safe Exam Browser.
   // PENTING: ini bukan sistem keamanan yang tidak bisa ditembus -- ini
