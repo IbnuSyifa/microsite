@@ -107,24 +107,40 @@ function showLoadError(err) {
 }
 
 function loadExams() {
-  fetch(CONFIG.API_URL)
-    .then(function (res) {
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      return res.text();
-    })
-    .then(function (text) {
-      var data;
-      try {
-        data = JSON.parse(text);
-      } catch (e) {
-        throw new Error('Balasan bukan JSON: ' + text.substring(0, 150));
-      }
-      document.getElementById('loading-state').hidden = true;
-      document.getElementById('error-state').hidden = true;
-      document.getElementById('server-time').textContent = formatTime(data.server_time);
-      renderExams(data.data || []);
-    })
-    .catch(showLoadError);
+  var cb = '__sebCb' + Date.now();
+  var script = document.createElement('script');
+  var finished = false;
+  var timer;
+
+  function cleanup() {
+    finished = true;
+    clearTimeout(timer);
+    delete window[cb];
+    if (script.parentNode) script.parentNode.removeChild(script);
+  }
+
+  window[cb] = function (data) {
+    cleanup();
+    document.getElementById('loading-state').hidden = true;
+    document.getElementById('error-state').hidden = true;
+    document.getElementById('server-time').textContent = formatTime(data.server_time);
+    renderExams(data.data || []);
+  };
+
+  timer = setTimeout(function () {
+    if (finished) return;
+    cleanup();
+    showLoadError(new Error('Tidak ada balasan dari server dalam 15 detik'));
+  }, 15000);
+
+  script.onerror = function () {
+    if (finished) return;
+    cleanup();
+    showLoadError(new Error('Skrip dari Apps Script gagal dimuat'));
+  };
+
+  script.src = CONFIG.API_URL + (CONFIG.API_URL.indexOf('?') === -1 ? '?' : '&') + 'callback=' + cb;
+  document.head.appendChild(script);
 }
 
 function init() {
